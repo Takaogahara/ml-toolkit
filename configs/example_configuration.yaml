@@ -1,0 +1,65 @@
+# Task configuration
+    # - Classification
+TASK: ["Classification"]
+
+# Run configuration
+RUN:
+# Experiment name
+- RUN_NAME: ["None"]
+# MLflow tracking URI
+- RUN_MLFLOW_URI: ["http://localhost:5000"]
+# Number of hyperparameters search samples
+- RUN_RAY_SAMPLES: [100]
+# Max epoch number for Hyperband
+- RUN_RAY_MAX_EPOCH: [5]
+# GPU core number per trial (bool)
+- RUN_RAY_GPU: [False]
+# Time budget to kill trials
+- RUN_RAY_TIME_BUDGET_S: [None]
+
+# Data configuration
+DATA:
+# Dataset separation already made
+- DATA_PREMADE: [True]
+# Path to dataset file
+- DATA_PATH: ["path/to/folder"]
+# Ratio to train/test split (float)
+- DATA_SPLIT: [0.2]
+
+# Model configuration
+MODEL:
+# Model type
+    # - MLP
+    # - AdaBoostClassifier
+    # - BaggingClassifier
+    # - ExtraTreesClassifier
+    # - GradientBoostingClassifier
+    # - RandomForestClassifier
+    # - SGDClassifier
+    # - BernoulliNB
+    # - GaussianNB
+    # - SVC
+    # - DecisionTreeClassifier
+    # - ExtraTreeClassifier
+- MODEL_TYPE: ["SGDClassifier"]
+
+# Optimization configuration
+OPTIMIZE:
+# Optimizer to be used
+    # - SGD
+    # - Adam
+- OPTIMIZE_MLP_OPTIMIZER: ["SGD"]
+# Learning rate (float range interval)
+- OPTIMIZE_MLP_LEARNING_RATE: [0.001, 1]
+# Batch size (int range interval)
+- OPTIMIZE_MLP_BATCH_SIZE: [16, 64]
+# Embedding size (int range interval)
+- OPTIMIZE_EMBEDDING_SIZE: [10, 64]
+# Dropout rate (float range interval)
+- OPTIMIZE_DROPOUT_RATE: [0.001]
+# Number of layers (int range interval)
+- OPTIMIZE_NUM_LAYERS: [2, 5]
+# User defined parameters
+    # - Example for SGDClassifier
+# - alpha: [0.01, 0.1]
+# - epsilon: [0.01, 1]
