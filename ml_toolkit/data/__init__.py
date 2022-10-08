@@ -1,12 +1,25 @@
 import warnings
 import numpy as np
 import pandas as pd
+from pathlib import Path
 from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 SEED = 8
 
 
 def load_data(cfg_file: dict):
+    """Main function to load data
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Raise:
+        RuntimeError: If task not avaliable
+
+    Returns:
+        train (tuple): train data in tuple format (X, y)
+        test (tuple): Test data in tuple format (X, y)
+    """
     task = cfg_file["TASK"].lower()
     model_type = cfg_file["MODEL_TYPE"].lower()
 
@@ -24,21 +37,45 @@ def load_data(cfg_file: dict):
 
 
 def _load_torch_data(cfg_file):
+    """Function to load torch like datasets
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        train (tuple): train data in tuple format (X, y)
+        test (tuple): Test data in tuple format (X, y)
+    """
+    # TODO Chg function to load dataset from csv
     _ = cfg_file["DATA_SPLIT"]
     _ = cfg_file["DATA_PREMADE"]
-    _ = cfg_file["DATA_PATH"]  # TODO USE POSIX
+    path = cfg_file["DATA_PATH"]
+    path = str(Path(path))
 
     X, y = make_classification(1000, 20, n_informative=10, random_state=SEED)
     X = X.astype(np.float32)
     y = y.astype(np.int64)
 
-    return (X, y), ()
+    train = (X, y)
+    test = ()
+
+    return train, test
 
 
 def _load_sklearn_data(cfg_file: dict):
+    """Function to load sklearn like datasets
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        train (tuple): train data in tuple format (X, y)
+        test (tuple): Test data in tuple format (X, y)
+    """
     split = cfg_file["DATA_SPLIT"]
     premade = cfg_file["DATA_PREMADE"]
-    path = cfg_file["DATA_PATH"]  # TODO USE POSIX
+    path = cfg_file["DATA_PATH"]
+    path = str(Path(path))
 
     if premade:
         # Read CSV file

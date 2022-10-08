@@ -5,6 +5,17 @@ from ml_toolkit.models.model_selection import ClassMLP, get_sklearn_models
 
 
 def get_model(cfg_file: dict):
+    """Main function to create estimators
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Raise:
+        RuntimeError: If task not avaliable
+
+    Returns:
+        model: Loaded model
+    """
     task = cfg_file["TASK"].lower()
     model_type = cfg_file["MODEL_TYPE"].lower()
 
@@ -22,6 +33,14 @@ def get_model(cfg_file: dict):
 
 
 def _select_sk_models(cfg_file: dict):
+    """Function to load sklearn like estimators
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        function: Sklearn like estimator
+    """
     model = cfg_file["MODEL_TYPE"].lower()
     models_dict = get_sklearn_models()
 
@@ -35,6 +54,14 @@ def _select_sk_models(cfg_file: dict):
 
 
 def _select_torch_model(cfg_file: dict):
+    """Function to load Skorch like estimators (MLP)
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        function: Skorch like estimator
+    """
     model = cfg_file["MODEL_TYPE"].lower()
     if model not in ["mlp"]:
         raise RuntimeError("Function not supported. Available: 'MLP'")
