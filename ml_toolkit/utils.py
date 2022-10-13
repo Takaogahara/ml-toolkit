@@ -1,6 +1,5 @@
 import copy
 import yaml
-# Nonsense comment
 
 train_param = {"TASK": ["Classification"],
 
