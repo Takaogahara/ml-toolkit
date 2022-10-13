@@ -12,6 +12,7 @@
 # device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # LOGO = Path(str(os.getcwd())) / "assets" / "logo.txt"
 
+# TODO WHOLE FILE
 
 # # * Train class
 # class TrainModel:

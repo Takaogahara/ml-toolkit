@@ -8,20 +8,22 @@ from ml_toolkit.data import load_data
 from ml_toolkit.models import get_model
 from ml_toolkit.utils import extract_configs
 
-# TODO REMOVE IMPORT
+# TODO REMOVE BEFORE USING MAIN.PY
 from ml_toolkit.utils import get_config
 
 
 @mlflow_mixin
-def ml_toolkit_sk(config):
-    """ # TODO
+def ml_toolkit(config):
+    """ Run ML-Toolkit
 
     Args:
-        parameters (dict): Ray Tune parsed parameters
+        parameters (dict): Dict like parameters
 
     Returns:
-        int: Best loss
+        dict: Best parameters
     """
+    # TODO Integrate MLFlow
+    # TODO Fix default None run name
     # if ray.tune.is_session_enabled():
     #     mlflow_sk.set_tag("mlflow.runName", ray.tune.get_trial_name())
     #     with ray.tune.checkpoint_dir(step=1) as checkpoint_dir:
@@ -43,6 +45,7 @@ def ml_toolkit_sk(config):
     best_params = fit(loader_train, model, parameters)
 
     # * Validate
+    # TODO Remove or create function
     x_train, y_train = loader_train
     x_test, y_test = loader_test
 
@@ -51,11 +54,13 @@ def ml_toolkit_sk(config):
 
     y_pred = clf.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
+    print(accuracy)
 
-    return accuracy
+    return best_params
 
 
+# TODO REMOVE BEFORE USING MAIN.PY
 path = "/media/takaogahara/data/projects/ml-toolkit/configs/ray_train.yaml"
 config = get_config(path)
 
-accuracy = ml_toolkit_sk(config)
+accuracy = ml_toolkit(config)

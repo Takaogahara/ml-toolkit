@@ -2,7 +2,20 @@ import pickle
 from ray.tune.sklearn import TuneSearchCV
 
 
-def fit(train: list, model, cfg_file: dict):
+def fit(train: tuple, model, cfg_file: dict):
+    """Main function to fit estimators
+
+    Args:
+        train (tuple): Loaded train data
+        model: Selected estimator
+        cfg_file (dict): dict like config parameters
+
+    Raise:
+        RuntimeError: If task not avaliable
+
+    Returns:
+        best_params (dict): Best parameters
+    """
     task = cfg_file["TASK"].lower()
 
     available_tasks = ["classification"]
@@ -18,7 +31,17 @@ def fit(train: list, model, cfg_file: dict):
     return best_params
 
 
-def _train_sk_models(train: list, model, cfg_file: dict):
+def _train_sk_models(train: tuple, model, cfg_file: dict):
+    """Function to fit sklearn like estimators
+
+    Args:
+        train (tuple): Loaded train data
+        model: Selected estimator
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        params (dict): Best parameters
+    """
     x_train, y_train = train
     run_name = cfg_file["RUN_NAME"]
     trials = cfg_file["RUN_RAY_SAMPLES"]
@@ -46,14 +69,24 @@ def _train_sk_models(train: list, model, cfg_file: dict):
     tune_search.fit(x_train, y_train)
     params = tune_search.best_params_
 
-    # TODO
+    # TODO FIX EXPORT PATH
     filename = "./estimator.pkl"
     pickle.dump(tune_search.best_estimator_, open(filename, 'wb'))
 
     return params
 
 
-def _train_torch_models(train: list, model, cfg_file: dict):
+def _train_torch_models(train: tuple, model, cfg_file: dict):
+    """Function to fit skorch like estimators
+
+    Args:
+        train (tuple): Loaded train data
+        model: Selected estimator
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        params (dict): Best parameters
+    """
     x_train, y_train = train
     run_name = cfg_file["RUN_NAME"]
     trials = cfg_file["RUN_RAY_SAMPLES"]
@@ -90,7 +123,7 @@ def _train_torch_models(train: list, model, cfg_file: dict):
     tune_search.fit(x_train, y_train)
     params = tune_search.best_params_
 
-    # TODO
+    # TODO FIX EXPORT PATH
     filename = "./estimator.pkl"
     pickle.dump(tune_search.best_estimator_, open(filename, 'wb'))
 
