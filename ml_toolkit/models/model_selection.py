@@ -1,83 +1,74 @@
-from torch import nn
-import torch.nn.functional as F
-from sklearn import (ensemble, linear_model,
-                     naive_bayes, svm, tree)
+from ml_toolkit.models.models import SK_MODELS, BasicMLP
 
 
-class ClassMLP(nn.Module):
-    def __init__(self, features: int, embedding: int, n_layers=3, dropout=0.2):
-        super(ClassMLP, self).__init__()
-        self.n_layers = n_layers
+def model_selection(cfg_file: dict):
+    """Main function to create estimators
 
-        if self.n_layers < 2:
-            raise RuntimeError("n_layers must be >= 2")
+    Args:
+        cfg_file (dict): dict like config parameters
 
-        self.dense_layers = nn.ModuleList([])
-        self.dropout_layers = nn.ModuleList([])
+    Raise:
+        RuntimeError: If task not avaliable
 
-        # Dense blocks
-        self.dense0 = nn.Linear(features, embedding)
-        for i in range(self.n_layers - 2):
-            self.dense_layers.append(
-                nn.Linear(embedding, embedding))
-        self.output = nn.Linear(embedding, 2)
+    Returns:
+        model: Loaded model
+    """
+    model_type = cfg_file["MODEL_TYPE"].lower()
 
-        # Dropout Blocks
-        self.dropout_0 = nn.Dropout(dropout)
-        for i in range(self.n_layers - 2):
-            self.dropout_layers.append(nn.Dropout(dropout))
+    if model_type == "mlp":
+        model = _select_torch_model(cfg_file)
 
-    def forward(self, X, **kwargs):
-        X = F.relu(self.dense0(X))
-        X = self.dropout_0(X)
+    else:
+        model = _select_sk_models(cfg_file)
 
-        for i in range(self.n_layers - 2):
-            X = F.relu(self.dense_layers[i](X))
-            X = self.dropout_layers[i](X)
-
-        X = F.softmax(self.output(X), dim=1)
-
-        return X
+    return model
 
 
-def get_sklearn_models():
-    models_dict = {
-        # Ensemble - Classifier
-        "adaboostclassifier": ensemble.AdaBoostClassifier,
-        "baggingclassifier": ensemble.BaggingClassifier,
-        "extratreesclassifier": ensemble.ExtraTreesClassifier,
-        "gradientboostingclassifier": ensemble.GradientBoostingClassifier,
-        "randomforestclassifier": ensemble.RandomForestClassifier,
+def _select_sk_models(cfg_file: dict):
+    """Function to load sklearn like estimators
 
-        # GLM - Classifier
-        "sgdclassifier": linear_model.SGDClassifier,
+    Args:
+        cfg_file (dict): dict like config parameters
 
-        # Navies Bayes - Classifier
-        "bernoullinb": naive_bayes.BernoulliNB,
-        "gaussiannb": naive_bayes.GaussianNB,
+    Returns:
+        model_fn: Sklearn like estimator
+    """
 
-        # SVM - Classifier
-        "svc": svm.SVC,
+    task = cfg_file["TASK"].lower()
+    available_tasks = ["classification", "regression"]
+    if task not in available_tasks:
+        raise RuntimeError(f"Task not supported. Available: {available_tasks}")
 
-        # Trees - Classifier
-        "decisiontreeclassifier": tree.DecisionTreeClassifier,
-        "extratreeclassifier": tree.ExtraTreeClassifier,
+    model = cfg_file["MODEL_TYPE"].lower()
 
-        # Ensemble - Regressor
-        "adaboostregressor": ensemble.AdaBoostRegressor,
-        "baggingregressor": ensemble.BaggingRegressor,
-        "extratreesregressor": ensemble.ExtraTreesRegressor,
-        "gradientboostingregressor": ensemble.GradientBoostingRegressor,
-        "randomforestregressor": ensemble.RandomForestRegressor,
+    keys = list(SK_MODELS.keys())
+    if model not in keys:
+        raise RuntimeError(f"Function not supported. Available: {keys}")
 
-        # GLM - Regressor
-        "sgdregressor": linear_model.SGDRegressor,
+    model_fn = SK_MODELS[model]
 
-        # SVM - Regressor
-        "svr": svm.SVR,
+    return model_fn
 
-        # Trees - Regressor
-        "decisiontreeregressor": tree.DecisionTreeRegressor,
-        "extratreeregressor": tree.ExtraTreeRegressor}
 
-    return models_dict
+def _select_torch_model(cfg_file: dict):
+    """Function to load Skorch like estimators (MLP)
+
+    Args:
+        cfg_file (dict): dict like config parameters
+
+    Returns:
+        function: Skorch like estimator
+    """
+    task = cfg_file["TASK"].lower()
+    available_tasks = ["classification", "regression"]
+    if task not in available_tasks:
+        raise RuntimeError(f"Task not supported. Available: {available_tasks}")
+
+    feature_size = cfg_file["OPTIMIZE_FEAT_SIZE"]
+    embedding_units = cfg_file["OPTIMIZE_EMBEDDING_SIZE"]
+    n_layers = cfg_file["OPTIMIZE_NUM_LAYERS"]
+    dropout = cfg_file["OPTIMIZE_DROPOUT_RATE"]
+
+    model_fn = BasicMLP(feature_size, embedding_units, n_layers, dropout)
+
+    return model_fn
