@@ -1,3 +1,5 @@
+deepchem==2.6.1
+matplotlib==3.6.2
 mlflow==1.26.1
 pyyaml==6.0
 ray[tune]==1.13.0

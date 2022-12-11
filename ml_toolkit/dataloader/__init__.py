@@ -2,12 +2,13 @@ import warnings
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
+
+from ml_toolkit.dataloader.load_csv import load_csv_data
 SEED = 8
 
 
-def load_data(cfg_file: dict):
+def data_selection(cfg_file: dict):
     """Main function to load data
 
     Args:
@@ -23,47 +24,22 @@ def load_data(cfg_file: dict):
     task = cfg_file["TASK"].lower()
     model_type = cfg_file["MODEL_TYPE"].lower()
 
-    available_tasks = ["classification"]
+    available_tasks = ["classification", "regression"]
     if task not in available_tasks:
         raise RuntimeError(f"Task not supported. Available: {available_tasks}")
 
+    # TODO Verificar utilidade
     if model_type == "mlp":
-        train, test = _load_torch_data(cfg_file)
+        train, test = load_csv_data(cfg_file)
 
     else:
-        train, test = _load_sklearn_data(cfg_file)
+        train, test = _load_csv_sk(cfg_file)
 
     return train, test
 
 
-def _load_torch_data(cfg_file):
-    """Function to load torch like datasets
-
-    Args:
-        cfg_file (dict): dict like config parameters
-
-    Returns:
-        train (tuple): train data in tuple format (X, y)
-        test (tuple): Test data in tuple format (X, y)
-    """
-    # TODO Chg function to load dataset from csv
-    _ = cfg_file["DATA_SPLIT"]
-    _ = cfg_file["DATA_PREMADE"]
-    path = cfg_file["DATA_PATH"]
-    path = str(Path(path))
-
-    X, y = make_classification(1000, 20, n_informative=10, random_state=SEED)
-    X = X.astype(np.float32)
-    y = y.astype(np.int64)
-
-    train = (X, y)
-    test = ()
-
-    return train, test
-
-
-def _load_sklearn_data(cfg_file: dict):
-    """Function to load sklearn like datasets
+def _load_csv_sk(cfg_file):
+    """Function to load csv datasets
 
     Args:
         cfg_file (dict): dict like config parameters
@@ -89,7 +65,9 @@ def _load_sklearn_data(cfg_file: dict):
             warnings.warn("Train subset has no len")
 
         y_train = df_train[["Label"]].to_numpy().flatten()
+        y_train = y_train.astype(np.int64)
         x_train = df_train.drop(columns=["Label"]).to_numpy()
+        x_train = x_train.astype(np.float32)
 
         # Get test subset
         df_test = dataframe[dataframe["Set"].str.lower() == "test"]
@@ -98,7 +76,9 @@ def _load_sklearn_data(cfg_file: dict):
             warnings.warn("Test subset has no len")
 
         y_test = df_test[["Label"]].to_numpy().flatten()
+        y_train = y_train.astype(np.int64)
         x_test = df_test.drop(columns=["Label"]).to_numpy()
+        x_train = x_train.astype(np.float32)
 
         # Return
         train = (x_train, y_train)
@@ -110,14 +90,17 @@ def _load_sklearn_data(cfg_file: dict):
         dataframe = pd.read_csv(path)
         dataframe = dataframe.drop(columns=["ID", "Set"])
 
-        y = dataframe[["Label"]].to_numpy().flatten()
-        X = dataframe.drop(columns=["Label"]).to_numpy()
+        y = dataframe[["Labels"]].to_numpy().flatten()
+        y = y.astype(np.int64)
+        X = dataframe.drop(columns=["Labels"]).to_numpy()
+        X = X.astype(np.float32)
 
-    x_train, x_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=split,
-                                                        random_state=SEED,
-                                                        stratify=y)
+        x_train, x_test, y_train, y_test = train_test_split(X, y,
+                                                            test_size=split,
+                                                            random_state=SEED,
+                                                            stratify=y)
 
-    train = (x_train, y_train)
-    test = (x_test, y_test)
-    return train, test
+        # Return
+        train = (x_train, y_train)
+        test = (x_test, y_test)
+        return train, test

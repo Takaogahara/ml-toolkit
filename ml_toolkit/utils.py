@@ -1,14 +1,20 @@
 import copy
 import yaml
+from ray import tune
+
+DEFAULT_PARAMS = ["TASK", "TYPE", "RUN", "DATA", "MODEL"]
 
 train_param = {"TASK": ["Classification"],
+               "TYPE": ["Train"],
 
                "RUN_NAME": ["None"],
                "RUN_MLFLOW_URI": ["http://localhost:5000"],
                "RUN_RAY_SAMPLES": [1],
                "RUN_RAY_MAX_EPOCH": [1],
-               "RUN_RAY_GPU": [True],
+               "RUN_RAY_CPU": [2],
+               "RUN_RAY_GPU": [1],
                "RUN_RAY_TIME_BUDGET_S": [None],
+               "RUN_RAY_RESUME": [False],
 
                "DATA_PREMADE": [False],
                "DATA_PATH": ["/path/to/file.csv"],
@@ -18,7 +24,10 @@ train_param = {"TASK": ["Classification"],
 
                "OPTIMIZE_MLP_OPTIMIZER": ["SGD"],
                "OPTIMIZE_MLP_LEARNING_RATE": [0.001, 0.1],
-               "OPTIMIZE_MLP_BATCH_SIZE": [64, 256]}
+               "OPTIMIZE_MLP_BATCH_SIZE": [16, 64],
+               "OPTIMIZE_EMBEDDING_SIZE": [16, 64],
+               "OPTIMIZE_DROPOUT_RATE": [0.2, 0.5],
+               "OPTIMIZE_NUM_LAYERS": [2, 5]}
 
 
 def get_config(yaml_path: str):
@@ -33,7 +42,7 @@ def get_config(yaml_path: str):
     with open(yaml_path, "r") as f:
         file = yaml.safe_load(f)
 
-    content = {"TASK": file["TASK"]}
+    content = {"TASK": file["TASK"], "TYPE": file["TYPE"]}
     parameters = copy.deepcopy(train_param)
 
     content_list = [file["RUN"], file["DATA"],
@@ -45,13 +54,12 @@ def get_config(yaml_path: str):
             content[key] = value
 
     # * Auto complete config file
-    default_params = ["TASK", "RUN", "DATA", "MODEL"]
     for key, value in list(content.items()):
-        is_default = [df_param in key for df_param in default_params]
+        is_default = [df_param in key for df_param in DEFAULT_PARAMS]
         is_default = any(is_default)
 
-        if (not is_default) and (key != "OPTIMIZE_MLP_OPTIMIZER"):
-            parameters[key] = tuple(value)
+        if (not is_default) or ("OPTIMIZE_" in key):
+            parameters[key] = tune.choice(value)
         else:
             parameters[key] = value
 
